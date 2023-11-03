@@ -1,0 +1,24 @@
+version: '3.7'
+services:
+  app:
+    build:
+      args:
+        user: node
+        uid: 1000
+        gid: 1000
+      context: .
+      dockerfile: Node.dockerfile
+      target: 'dev-stage'
+    ports:
+      - '3000:3000'
+    container_name: reactest-firebase
+    restart: always
+    command: /bin/sh -c "chown -R 1000:1000 /app && cd /app && npm install && npm run dev"
+    volumes:
+      - './app:/app'
+    networks:
+      - reacttest
+
+networks:
+  reacttest:
+      name: reacttest_network
