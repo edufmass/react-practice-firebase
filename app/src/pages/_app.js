@@ -9,10 +9,13 @@ import { useNProgress } from 'src/hooks/use-nprogress';
 import { createTheme } from 'src/theme';
 import { createEmotionCache } from 'src/utils/create-emotion-cache';
 import 'simplebar-react/dist/simplebar.min.css';
+import { firebaseConfig } from 'src/utils/FirebaseUtils';
 
 const clientSideEmotionCache = createEmotionCache();
 
 const SplashScreen = () => null;
+
+firebaseConfig();
 
 const App = (props) => {
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;

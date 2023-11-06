@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { firebaseRegisterUser, firebaseSignIn } from 'src/utils/FirebaseUtils';
 
 const HANDLERS = {
   INITIALIZE: 'INITIALIZE',
@@ -128,31 +129,43 @@ export const AuthProvider = (props) => {
   };
 
   const signIn = async (email, password) => {
-    if (email !== 'demo@devias.io' || password !== 'Password123!') {
+    /*if (email !== 'demo@devias.io' || password !== 'Password123!') {
       throw new Error('Please check your email and password');
+    }*/
+
+    let signedIn = await firebaseSignIn(email, password);
+
+    if(signedIn) {
+
+      try {
+        window.sessionStorage.setItem('authenticated', 'true');
+      } catch (err) {
+        console.error(err);
+      }
+
+      const user = {
+        id: '5e86809283e28b96d2d38537',
+        avatar: '/assets/avatars/avatar-anika-visser.png',
+        name: 'Anika Visser',
+        email: 'anika.visser@devias.io'
+      };
+
+      dispatch({
+        type: HANDLERS.SIGN_IN,
+        payload: user
+      });
+    } else {
+      throw new Error('Please check your email and password.');
     }
-
-    try {
-      window.sessionStorage.setItem('authenticated', 'true');
-    } catch (err) {
-      console.error(err);
-    }
-
-    const user = {
-      id: '5e86809283e28b96d2d38537',
-      avatar: '/assets/avatars/avatar-anika-visser.png',
-      name: 'Anika Visser',
-      email: 'anika.visser@devias.io'
-    };
-
-    dispatch({
-      type: HANDLERS.SIGN_IN,
-      payload: user
-    });
   };
 
   const signUp = async (email, name, password) => {
-    throw new Error('Sign up is not implemented');
+    //throw new Error('Sign up is not implemented');
+    let registered = await firebaseRegisterUser(email, password);
+
+    if (!registered) {
+      throw new Error('Register error. Try another email.') 
+    }
   };
 
   const signOut = () => {
