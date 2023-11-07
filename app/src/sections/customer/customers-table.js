@@ -3,8 +3,10 @@ import { format } from 'date-fns';
 import {
   Avatar,
   Box,
+  Button,
   Card,
   Checkbox,
+  SvgIcon,
   Stack,
   Table,
   TableBody,
@@ -14,10 +16,14 @@ import {
   TableRow,
   Typography
 } from '@mui/material';
+import TrashIcon from '@heroicons/react/24/solid/TrashIcon';
 import { Scrollbar } from 'src/components/scrollbar';
 import { getInitials } from 'src/utils/get-initials';
+import { firebaseDeleteCustomer } from 'src/utils/FirebaseUtils';
+import { useRouter } from 'next/navigation';
 
 export const CustomersTable = (props) => {
+  const router = useRouter();
   const {
     count = 0,
     items = [],
@@ -70,12 +76,16 @@ export const CustomersTable = (props) => {
                 <TableCell>
                   Signed Up
                 </TableCell>
+                <TableCell>
+                  Action
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {items.map((customer) => {
                 const isSelected = selected.includes(customer.id);
-                const createdAt = format(customer.createdAt, 'dd/MM/yyyy');
+                let tmpDate = new Date(customer.created_at.seconds*1000);
+                const createdAt = format(tmpDate, 'dd/MM/yyyy');
 
                 return (
                   <TableRow
@@ -105,7 +115,7 @@ export const CustomersTable = (props) => {
                           {getInitials(customer.name)}
                         </Avatar>
                         <Typography variant="subtitle2">
-                          {customer.name}
+                          {customer.name} {customer.lastname}
                         </Typography>
                       </Stack>
                     </TableCell>
@@ -113,13 +123,38 @@ export const CustomersTable = (props) => {
                       {customer.email}
                     </TableCell>
                     <TableCell>
-                      {customer.address.city}, {customer.address.state}, {customer.address.country}
+                      {customer.location}
                     </TableCell>
                     <TableCell>
                       {customer.phone}
                     </TableCell>
                     <TableCell>
                       {createdAt}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        onClick={() => {
+                          try {
+                            let deleted = firebaseDeleteCustomer('rpf-customers', customer.id);
+                            if(deleted) {
+                              router.refresh();
+                            } else {
+                              alert('Element not deleted');
+                            }
+                          } catch (e) {
+                            alert('An error ocurred trying to delete the element.')
+                          }
+                        }}
+                        startIcon={(
+                          <SvgIcon fontSize="small">
+                            <TrashIcon />
+                          </SvgIcon>
+                        )}
+                        color='error'
+                        variant="contained"
+                      >
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );

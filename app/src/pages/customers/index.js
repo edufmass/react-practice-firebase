@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import { subDays, subHours } from 'date-fns';
 import ArrowDownOnSquareIcon from '@heroicons/react/24/solid/ArrowDownOnSquareIcon';
@@ -10,6 +10,8 @@ import { Layout as DashboardLayout } from 'src/layouts/dashboard/layout';
 import { CustomersTable } from 'src/sections/customer/customers-table';
 import { CustomersSearch } from 'src/sections/customer/customers-search';
 import { applyPagination } from 'src/utils/apply-pagination';
+import { firebaseGetAllCustomers } from 'src/utils/FirebaseUtils';
+import { useRouter } from 'next/navigation';
 
 const now = new Date();
 
@@ -156,30 +158,45 @@ const data = [
   }
 ];
 
-const useCustomers = (page, rowsPerPage) => {
-  return useMemo(
-    () => {
-      return applyPagination(data, page, rowsPerPage);
-    },
-    [page, rowsPerPage]
-  );
-};
 
-const useCustomerIds = (customers) => {
-  return useMemo(
-    () => {
-      return customers.map((customer) => customer.id);
-    },
-    [customers]
-  );
-};
 
-const Page = () => {
+function Page() {
+
+  const router = useRouter();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [allCustomers, setAllCustomers] = useState([]);
+
+  const useCustomers = (page, rowsPerPage) => {
+    return useMemo(
+      () => {
+        return applyPagination(allCustomers, page, rowsPerPage);
+      },
+      [page, rowsPerPage]
+    );
+  };
+  
+  const useCustomerIds = (customers) => {
+    return useMemo(
+      () => {
+        return customers.map((customer) => customer.id);
+      },
+      [customers]
+    );
+  };
+
+  
   const customers = useCustomers(page, rowsPerPage);
   const customersIds = useCustomerIds(customers);
   const customersSelection = useSelection(customersIds);
+  
+
+  
+
+  const getAllCustomers = async () => {
+    let ac = await firebaseGetAllCustomers('rpf-customers');
+    setAllCustomers(ac);
+  }
 
   const handlePageChange = useCallback(
     (event, value) => {
@@ -194,6 +211,10 @@ const Page = () => {
     },
     []
   );
+
+  useEffect(() => {
+    getAllCustomers();
+  }, []);
 
   return (
     <>
@@ -249,6 +270,9 @@ const Page = () => {
               </Stack>
               <div>
                 <Button
+                  onClick={() => {
+                    router.push('/customers/add')
+                  }}
                   startIcon={(
                     <SvgIcon fontSize="small">
                       <PlusIcon />
@@ -262,8 +286,8 @@ const Page = () => {
             </Stack>
             <CustomersSearch />
             <CustomersTable
-              count={data.length}
-              items={customers}
+              count={allCustomers.length}
+              items={allCustomers}
               onDeselectAll={customersSelection.handleDeselectAll}
               onDeselectOne={customersSelection.handleDeselectOne}
               onPageChange={handlePageChange}

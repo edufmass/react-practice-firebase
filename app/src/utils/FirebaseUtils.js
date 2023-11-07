@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-
+import { addDoc, collection, deleteDoc, doc, getDocs, setDoc, getFirestore, Timestamp } from 'firebase/firestore';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -58,6 +58,55 @@ export async function firebaseSignIn(email, password) {
     try {
         let credentials = await signInWithEmailAndPassword(auth, email, password);
     } catch(e) {
+        return false;
+    }
+    return true;
+}
+
+export async function firebaseGetAllCustomers(collectionName) {
+    let customers = [];
+    const auth = getAuth();
+    const firestore = getFirestore();
+    try {
+        const coll = collection(firestore, collectionName);
+        let result = await getDocs(coll);
+        result.forEach(doc => {
+            let elem = doc.data();
+            elem.id = doc.id;
+            customers.push(elem);
+        });
+    } catch(e) {
+
+    }
+    return customers;
+}
+
+export async function firebaseCreateCustomer(collectionName, values) {
+    const firestore = getFirestore();
+    const coll = collection(firestore, collectionName);
+    try {
+        let now = Timestamp.fromDate(new Date());
+        const docRef = await addDoc(coll, {
+            name: values.name,
+            lastname: values.lastname,
+            email: values.email,
+            location: values.location,
+            phone: values.phone,
+            created_at: now
+        });
+        return true;
+    } catch(e) {
+        console.log(e);
+        return false;
+
+    }
+}
+
+export async function firebaseDeleteCustomer(collectionName, customerId) {
+    const firestore = getFirestore();
+    try {
+        let result = await deleteDoc(doc(firestore, collectionName, customerId));
+    } catch (error) {
         return false;
     }
     return true;
